@@ -1,0 +1,14 @@
+{
+    "items":{
+        "categories":["tarjeta_1", "tarjeta_2","seguro","renta","margarita","internet","super","gastos","perros", "moras"],
+        "months":["ene","feb","mar","abr","may", "jun","jul","ago","sep","oct","nov","dic"],
+        "period":[{
+            "name":"ago",
+            "incomeQ1":22500,
+            "incomeQ2":22500,
+            "closingQ1":0,
+            "closingQ2":0
+        }]}
+
+
+}
