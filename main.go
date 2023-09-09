@@ -7,6 +7,7 @@ import (
 	"time"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -76,32 +77,58 @@ type Seed struct {
 	Categories []string `json:"categories"`
 	Months     []string `json:"months"`
 	Period     []struct {
-		Name      string
-		IncomeQ1  int32
-		IncomeQ2  int32
-		ClosingQ1 int32
-		ClosingQ2 int32
-	} `json:"period"`
+		Name      string `json:"name"`
+		Incomeq1  int32  `json:"incomeQ1"`
+		Incomeq2  int32  `json:"IncomeQ2"`
+		Closingq1 int32  `json:"ClosingQ1"`
+		Closingq2 int32  `json:"ClosingQ2"`
+	} `json:"periods"`
+	Expense []struct {
+		Name       string `json:"name"`
+		CatedoryId int    `json:"category_id"`
+		Amount     int    `json:"amount"`
+		PeriodId   int    `json:"period_id"`
+	} `json:"expenses"`
+	BudgetItem []struct {
+		Name       string `json:"name"`
+		CatedoryId int    `json:"category_id"`
+		Amount     int    `json:"amount"`
+		PeriodId   int    `json:"period_id"`
+		Fortnight  int    `json:"fortnight"`
+		Mont       int    `json:"month"`
+	} `json:"budgetItems"`
+}
+
+func getSeed() (Seed, error) {
+
+	file, error := os.ReadFile("./seed.json")
+	if error != nil {
+		panic(error)
+	}
+	v := Seed{}
+	error = json.Unmarshal(file, &v)
+	if error != nil {
+		panic(error)
+	}
+	return v, nil
 }
 
 func main() {
-	fmt.Println("Works...")
-	// db, error := gorm.Open(sqlite.Open("finance.db"), &gorm.Config{})
+	fmt.Println("Running")
+	db, error := gorm.Open(sqlite.Open("finance.db"), &gorm.Config{})
 	if len(os.Args) > 1 {
 		featFlag := os.Args[1]
 		switch featFlag {
-		case "this-is-args":
-			fmt.Println("...")
-			file, error := os.ReadFile("./seed.json")
+		case "migrate":
+			error = db.AutoMigrate(&Category{}, &Expence{}, &BudgetItem{}, &Month{}, &Period{}, &Month{})
 			if error != nil {
 				panic(error)
 			}
-			v := map[string]Seed{}
-			error = json.Unmarshal(file, &v)
-			if error != nil {
-				panic(error)
+			seed, err := getSeed()
+			if err != nil {
+				panic(err)
 			}
-			fmt.Printf("%+v", v)
+			fmt.Printf("%+v", seed.Categories)
 
 			return
 		default:
@@ -109,15 +136,11 @@ func main() {
 
 		}
 
-		// error = db.AutoMigrate(&Category{}, &Expence{}, &BudgetItem{}, &Month{}, &Period{})
-		// if error != nil {
-		// 	panic(error)
-		// }
 	}
 
-	// if error != nil {
-	// 	panic(error)
-	// }
+	if error != nil {
+		panic(error)
+	}
 	token := os.Getenv("TEL_TOKEN")
 	fmt.Println(token)
 	bot, err := tgbot.NewBotAPI(token)

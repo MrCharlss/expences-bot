@@ -4,4 +4,4 @@ run:
 	@go run main.go
 
 migrate:
-	@go run main.go this-is-args
+	@go run main.go migrate
