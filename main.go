@@ -1,12 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/mrcharlss/finance-bot/utils"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -18,11 +19,13 @@ type Category struct {
 type Period struct {
 	gorm.Model
 	ID        uint `gorm:"primaryKey;autoIncrement;"`
-	IncomeQ1  string
-	IncomeQ2  string
+	IncomeQ1  int32
+	IncomeQ2  int32
 	Name      string
 	ClosingQ1 int32
 	ClosingQ2 int32
+	MonthID   int
+	Month     Month
 }
 
 type Expence struct {
@@ -34,6 +37,8 @@ type Expence struct {
 	Amount     int
 	PeriodID   int
 	Period     Period
+	MonthID    int
+	Month      Month
 }
 
 type BudgetItem struct {
@@ -47,7 +52,7 @@ type BudgetItem struct {
 	Category   Category
 	Fortnight  int
 	Month      Month
-	MonthId    int
+	MonthID    int
 	PeriodID   int
 	Period     Period
 }
@@ -72,66 +77,84 @@ var otherKeyboard = tgbot.NewInlineKeyboardMarkup(
 var numericKeyBoard = tgbot.NewReplyKeyboard(tgbot.NewKeyboardButtonRow(tgbot.NewKeyboardButton("WOW")))
 var inlineKeyboard = tgbot.NewInlineKeyboardMarkup(tgbot.NewInlineKeyboardRow(tgbot.NewInlineKeyboardButtonData("N", "5")))
 
-type Seed struct {
-	Categories []string `json:"categories"`
-	Months     []string `json:"months"`
-	Period     []struct {
-		Name      string `json:"name"`
-		Incomeq1  int32  `json:"incomeQ1"`
-		Incomeq2  int32  `json:"IncomeQ2"`
-		Closingq1 int32  `json:"ClosingQ1"`
-		Closingq2 int32  `json:"ClosingQ2"`
-	} `json:"periods"`
-	Expense []struct {
-		Name       string `json:"name"`
-		CatedoryId int    `json:"category_id"`
-		Amount     int    `json:"amount"`
-		PeriodId   int    `json:"period_id"`
-	} `json:"expenses"`
-	BudgetItem []struct {
-		Name       string `json:"name"`
-		CatedoryId int    `json:"category_id"`
-		Amount     int    `json:"amount"`
-		PeriodId   int    `json:"period_id"`
-		Fortnight  int    `json:"fortnight"`
-		Mont       int    `json:"month"`
-	} `json:"budgetItems"`
-}
-type ret_val map[string][]interface{}
- 
-func getSeed() (Seed, error) {
-
-	file, error := os.ReadFile("./seed.json")
-	if error != nil {
-		panic(error)
-	}
-    v := Seed{} 	
-    error = json.Unmarshal(file, &v)
-	if error != nil {
-		panic(error)
-	}
-	return v, nil
-}
-
 func main() {
 	fmt.Println("Running")
-	// db, error := gorm.Open(sqlite.Open("finance.db"), &gorm.Config{})
+	db, error := gorm.Open(sqlite.Open("finance.db"), &gorm.Config{})
 	if len(os.Args) > 1 {
 		featFlag := os.Args[1]
 		switch featFlag {
 		case "migrate":
-			// error = db.AutoMigrate(&Category{}, &Expence{}, &BudgetItem{}, &Month{}, &Period{}, &Month{})
-			// if error != nil {
-			// 	panic(error)
-			// }
-			seed, err := getSeed()
-            fmt.Println(seed.BudgetItem)
+			error = db.AutoMigrate(&Category{}, &Expence{}, &BudgetItem{}, &Month{}, &Period{}, &Month{})
+			if error != nil {
+				panic(error)
+			}
+			seed, err := utils.GetSeed()
+			if err != nil {
+				panic(err)
+			}
+			for _, item := range seed.BudgetItems {
+				if err := db.Create(&BudgetItem{
+					Name:       item.Name,
+					Amount:     item.Amount,
+					CategoryID: item.CatedoryId,
+					Fortnight:  item.Fortnight,
+					MonthID:    item.MonthId,
+					PeriodID:   item.PeriodId,
+				}).Error; err != nil {
+					panic(err)
+				}
+
+			}
+			for _, item := range seed.Months {
+				if err := db.Create(&Month{
+					Month: item,
+				}).Error; err != nil {
+					panic(err)
+				}
+			}
+			for _, item := range seed.Expenses {
+				if err := db.Create(&Expence{
+					MonthID:    item.MonthId,
+					Name:       item.Name,
+					CategoryID: item.CatedoryId,
+					PeriodID:   item.PeriodId,
+					Amount:     item.Amount,
+				}).Error; err != nil {
+					panic(err)
+				}
+			}
+			for _, item := range seed.Periods {
+				if err := db.Create(&Period{
+					MonthID:   item.MonthId,
+					Name:      item.Name,
+					IncomeQ1:  item.Incomeq1,
+					IncomeQ2:  item.Incomeq2,
+					ClosingQ1: item.Closingq1,
+					ClosingQ2: item.Closingq2,
+				}).Error; err != nil {
+					panic(err)
+				}
+			}
+			for _, item := range seed.Categories {
+				if err := db.Create(&Category{
+					Name: item,
+				}).Error; err != nil {
+					panic(err)
+				}
+			}
+			fmt.Print("done migrating")
+
+			// fmt.Println(seed.BudgetItems)
+			// fmt.Println(seed.Months)
+			// fmt.Println(seed.Categories)
+			// fmt.Println(seed.Expenses)
+			// fmt.Println(seed.Periods)
 			if err != nil {
 				panic(err)
 			}
 			// var cats []Category
 			// for _, cat := range seed.Categories {
-   //              cats = append(cats, Category{
+			//              cats = append(cats, Category{
 			// 		Name: cat,
 			// 	})
 			// }
@@ -196,6 +219,8 @@ func main() {
 		case "close":
 			msg.Text = "closing"
 			msg.ReplyMarkup = tgbot.NewRemoveKeyboard(true)
+        case "consultar":
+            msg.Text = "Budget:\nReal:\nProyeccion:\n"
 		default:
 			msg.Text = "Comando desconocido"
 

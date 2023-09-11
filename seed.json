@@ -1,45 +1,50 @@
 { 
-    "items":[
-        {"categories":["tarjeta_1", "tarjeta_2","seguro","renta","margarita","internet","super","gastos","perros", "moras"]},
-        {"months":["ene","feb","mar","abr","may", "jun","jul","ago","sep","oct","nov","dic"]},
-        {"periods":[{
+        "categories":["tarjeta_1", "tarjeta_2","seguro","renta","margarita","internet","super","gastos","perros", "moras"],
+        "months":["ene","feb","mar","abr","may", "jun","jul","ago","sep","oct","nov","dic"],
+        "periods":[{
             "name":"ago",
             "incomeQ1":22500,
             "incomeQ2":22500,
             "closingQ1":0,
-            "closingQ2":0
-        }]},
-        {"expenses":[{
+            "closingQ2":0,
+        "month_id":9
+        }],
+        "expenses":[{
             "name":"super",
             "category_id":7,
             "amount":2700,
-            "period_id":1
+            "period_id":1,
+        "month_id":9
         },{
                 "name":"perros",
                 "category_id":9,
                 "amount":1500,
-                "period_id":1
+                "period_id":1,
+        "month_id":9
+
             },{
                 "name":"seguro",
                 "category_id":3,
                 "amount":1300,
-                "period_id":1
-            }]},
+                "period_id":1,
+        "month_id":9
 
-        {"budgetItems":[{
+            }],
+
+        "budgetItems":[{
             "name":"super",
             "category_id":7,
             "amount":2500,
             "period_id":1,
             "fortnight":1,
-            "month":9
+            "month_id":9
         },{
                 "name":"perros",
                 "category_id":9,
                 "amount":1500,
                 "period_id":1,
                 "fortnight":1,
-                "month":9
+                "month_id":9
 
             },{
                 "name":"seguro",
@@ -47,9 +52,9 @@
                 "amount":2300,
                 "period_id":1,
                 "fortnight":1,
-                "month":9
-            }]}
-]
+                "month_id":9
+            }]
+
 
 
 }
