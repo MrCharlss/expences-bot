@@ -220,6 +220,8 @@ func main() {
 			msg.Text = "closing"
 			msg.ReplyMarkup = tgbot.NewRemoveKeyboard(true)
         case "consultar":
+            fmt.Println("consultar")
+            utils.GetBudget(db)
             msg.Text = "Budget:\nReal:\nProyeccion:\n"
 		default:
 			msg.Text = "Comando desconocido"
@@ -233,3 +235,4 @@ func main() {
 	fmt.Printf("%+v", bot)
 
 }
+

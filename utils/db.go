@@ -2,7 +2,10 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+
+	"gorm.io/gorm"
 )
 
 type Period struct {
@@ -50,4 +53,23 @@ func GetSeed() (Seed, error) {
 		panic(error)
 	}
 	return v, nil
+}
+
+type Budget struct {
+    ID int
+    category_id int
+    name string
+}
+var budgetItems = "budget_items"
+func GetBudget(db *gorm.DB)  {
+    fmt.Print("GetBudget")
+
+    var budget Budget
+
+    error  := db.Raw("select category_id, sum(amount), name from budget_items where month_id = '9' group by category_id;").Scan(&budget).Error
+    if error != nil {
+        panic(error)
+    }
+    fmt.Print(budget)
+    
 }
