@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	tgbot "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -219,10 +220,19 @@ func main() {
 		case "close":
 			msg.Text = "closing"
 			msg.ReplyMarkup = tgbot.NewRemoveKeyboard(true)
-        case "consultar":
-            fmt.Println("consultar")
-            utils.GetBudget(db)
-            msg.Text = "Budget:\nReal:\nProyeccion:\n"
+		case "consultar":
+			fmt.Println("consultar")
+			data := utils.GetBudget(db)
+			var resString strings.Builder
+            var total int = 0
+			for _, item := range *data {
+				resString.WriteString(fmt.Sprintf("Name: %v\nAmount: $%v\n- - -\n", item.Name, item.Amount))
+
+                total += item.Amount
+			}
+            resString.WriteString(fmt.Sprintf("Total: $%v", total))
+
+            msg.Text = resString.String()
 		default:
 			msg.Text = "Comando desconocido"
 
@@ -235,4 +245,3 @@ func main() {
 	fmt.Printf("%+v", bot)
 
 }
-

@@ -56,20 +56,18 @@ func GetSeed() (Seed, error) {
 }
 
 type Budget struct {
-    ID int
-    category_id int
-    name string
+    CategoryId int 
+    Name string     
+    Amount int 
 }
 var budgetItems = "budget_items"
-func GetBudget(db *gorm.DB)  {
-    fmt.Print("GetBudget")
+func GetBudget(db *gorm.DB) *[]Budget {
 
-    var budget Budget
+    var budget []Budget
 
-    error  := db.Raw("select category_id, sum(amount), name from budget_items where month_id = '9' group by category_id;").Scan(&budget).Error
-    if error != nil {
-        panic(error)
-    }
-    fmt.Print(budget)
+    db.Raw("select category_id, sum(amount) as amount, name from budget_items where month_id = '9' group by category_id;").Scan(&budget)
+   
+    fmt.Printf("This is db result:\n%+v\n",budget)
+    return &budget
     
 }
