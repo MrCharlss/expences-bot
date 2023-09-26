@@ -65,14 +65,8 @@ type Month struct {
 
 var otherKeyboard = tgbot.NewInlineKeyboardMarkup(
 	tgbot.NewInlineKeyboardRow(
-		// tgbot.NewInlineKeyboardButtonURL("Categories"),
-		tgbot.NewInlineKeyboardButtonSwitch("2sw", "open 2"),
-		tgbot.NewInlineKeyboardButtonData("3", "3"),
-	),
-	tgbot.NewInlineKeyboardRow(
-		tgbot.NewInlineKeyboardButtonData("4", "4"),
-		tgbot.NewInlineKeyboardButtonData("5", "5"),
-		tgbot.NewInlineKeyboardButtonData("6", "6"),
+		tgbot.NewInlineKeyboardButtonData("Buget", "budget"),
+		tgbot.NewInlineKeyboardButtonData("Gastos", "gastos"),
 	),
 )
 var numericKeyBoard = tgbot.NewReplyKeyboard(tgbot.NewKeyboardButtonRow(tgbot.NewKeyboardButton("WOW")))
@@ -179,30 +173,33 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	bot.Debug = true
+	// bot.Debug = true
 	updateConfig := tgbot.NewUpdate(0)
 	updateConfig.Timeout = 30
 	updatesChan := bot.GetUpdatesChan(updateConfig)
 
 	for update := range updatesChan {
+		// fmt.Printf("%+v", update.CallbackQuery)
 		if update.Message == nil {
-			// fmt.Printf("Message nil - %+v\n", update)
-			continue
+			fmt.Printf("Message nil - %+v\n", update)
 		}
-		if !update.Message.IsCommand() {
-			continue
-		}
+
 		if update.CallbackQuery != nil {
-			callback := tgbot.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
-			res, err := bot.Request(callback)
-			if err != nil {
-				panic(err)
+			fmt.Println("CALLBACK")
+			msg := tgbot.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+			switch update.CallbackData() {
+			case "gastos":
+				msg.Text = "This is gastos"
+				msg.ReplyMarkup = inlineKeyboard
+
+			default:
+				msg.Text = "No valid option"
 			}
-			fmt.Printf("\n this is callback %+v \n", res)
-			msg := tgbot.NewMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Data)
+
 			if _, err := bot.Send(msg); err != nil {
 				panic(err)
 			}
+			continue
 
 		}
 
@@ -212,27 +209,27 @@ func main() {
 			msg.Text = "Nuevo Gasto: /gasto \nVer budget: /budget"
 		case "budget":
 			msg.Text = "botones..."
-			msg.ReplyMarkup = inlineKeyboard
+			msg.ReplyMarkup = numericKeyBoard
 		case "gasto":
 
-			msg.Text = "botones...2"
+			msg.Text = "Acciones:"
 			msg.ReplyMarkup = otherKeyboard
 		case "close":
 			msg.Text = "closing"
 			msg.ReplyMarkup = tgbot.NewRemoveKeyboard(true)
 		case "consultar":
 			fmt.Println("consultar")
-			data := utils.GetBudget(db)
+			data := utils.GetExpences(db)
 			var resString strings.Builder
-            var total int = 0
-			for _, item := range *data {
+			var total int = 0
+			for _, item := range data {
 				resString.WriteString(fmt.Sprintf("Name: %v\nAmount: $%v\n- - -\n", item.Name, item.Amount))
 
-                total += item.Amount
+				total += item.Amount
 			}
-            resString.WriteString(fmt.Sprintf("Total: $%v", total))
+			resString.WriteString(fmt.Sprintf("Total: $%v", total))
 
-            msg.Text = resString.String()
+			msg.Text = resString.String()
 		default:
 			msg.Text = "Comando desconocido"
 

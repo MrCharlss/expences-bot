@@ -5,3 +5,6 @@ run:
 
 migrate:
 	@go run main.go migrate
+
+drop-db:
+	rm ./finance.db

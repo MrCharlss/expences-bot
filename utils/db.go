@@ -71,3 +71,14 @@ func GetBudget(db *gorm.DB) *[]Budget {
     return &budget
     
 }
+
+func GetExpences(db *gorm.DB) []Expense {
+    var data []Expense
+
+    db.Raw("select * from expences where month_id = '9'").Scan(&data)
+   
+    fmt.Printf("This is db result:\n%+v\n",data)
+    return data
+
+}
+
